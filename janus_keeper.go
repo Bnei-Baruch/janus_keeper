@@ -64,6 +64,12 @@ var (
 		[]string{"name", "state"},
 		nil,
 	)
+	janusInfoDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "info"),
+		"Janus server info. Always 1, with version metadata in labels.",
+		[]string{"name", "version", "version_string", "author"},
+		nil,
+	)
 
 	// configBlockRe matches a top-level libconfig block name (identifier at column 0).
 	configBlockRe = regexp.MustCompile(`^([a-zA-Z_]\w*)`)
@@ -168,6 +174,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- currentHandles
 	ch <- janusUp
 	ch <- pluginDesc
+	ch <- janusInfoDesc
 	ch <- streamsConfiguredDesc
 	ch <- streamsMountedDesc
 	ch <- streamMissingDesc
@@ -266,7 +273,11 @@ type janusVideoroomListResponse struct {
 
 // janusInfo is the response to the /info endpoint.
 type janusInfo struct {
-	Plugins map[string]struct {
+	Name          string `json:"name"`
+	Version       int    `json:"version"`
+	VersionString string `json:"version_string"`
+	Author        string `json:"author"`
+	Plugins       map[string]struct {
 		Name string `json:"name"`
 	} `json:"plugins"`
 }
@@ -802,6 +813,8 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 		if err != nil {
 			e.logger.Error("Cannot fetch server info", "err", err)
 		} else {
+			ch <- prometheus.MustNewConstMetric(janusInfoDesc, prometheus.GaugeValue, 1,
+				info.Name, strconv.Itoa(info.Version), info.VersionString, info.Author)
 			for key := range info.Plugins {
 				ch <- prometheus.MustNewConstMetric(pluginDesc, prometheus.GaugeValue, 1,
 					pluginShortName(key), "loaded")
