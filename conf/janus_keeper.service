@@ -1,0 +1,17 @@
+[Unit]
+Description=janus_keeper Service
+Wants=basic.target
+After=basic.target network.target
+
+[Service]
+User=janus
+Group=janus
+Environment=ADMIN_SECRET=CHANGE_ME
+ExecStart=/usr/local/bin/janus_keeper --janus.admin-secret-env="ADMIN_SECRET"
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=always
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target
