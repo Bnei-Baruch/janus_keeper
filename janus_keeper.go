@@ -40,10 +40,16 @@ var (
 	currentHandles  = newMetric("current_handles", "Current number of open plugin handles", nil)
 	janusUp         = newMetric("up", "Was the last scrape successful.", nil)
 
-	streamsDesc = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "streams"),
-		"Number of streaming mountpoints.",
-		[]string{"source", "plugin"},
+	streamsConfiguredDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "streams_configured"),
+		"Number of streams declared in the plugin config file.",
+		[]string{"plugin"},
+		nil,
+	)
+	streamsMountedDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "streams_mounted"),
+		"Number of streams currently mounted/active in Janus.",
+		[]string{"plugin"},
 		nil,
 	)
 	streamMissingDesc = prometheus.NewDesc(
@@ -162,7 +168,8 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- currentHandles
 	ch <- janusUp
 	ch <- pluginDesc
-	ch <- streamsDesc
+	ch <- streamsConfiguredDesc
+	ch <- streamsMountedDesc
 	ch <- streamMissingDesc
 	ch <- e.totalScrapes.Desc()
 }
@@ -817,8 +824,8 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 			if err != nil {
 				e.logger.Error("Cannot read streaming config", "err", err)
 			} else {
-				ch <- prometheus.MustNewConstMetric(streamsDesc, prometheus.GaugeValue,
-					float64(len(configStreams)), "config", "streaming")
+				ch <- prometheus.MustNewConstMetric(streamsConfiguredDesc, prometheus.GaugeValue,
+					float64(len(configStreams)), "streaming")
 			}
 		}
 
@@ -826,8 +833,8 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 		if err != nil {
 			e.logger.Error("Cannot list mounted streams", "err", err)
 		} else {
-			ch <- prometheus.MustNewConstMetric(streamsDesc, prometheus.GaugeValue,
-				float64(len(mounted)), "api-request", "streaming")
+			ch <- prometheus.MustNewConstMetric(streamsMountedDesc, prometheus.GaugeValue,
+				float64(len(mounted)), "streaming")
 
 			if configStreams != nil {
 				mountedIDs := make(map[uint64]bool, len(mounted))
@@ -862,8 +869,8 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 			if err != nil {
 				e.logger.Error("Cannot read videoroom config", "err", err)
 			} else {
-				ch <- prometheus.MustNewConstMetric(streamsDesc, prometheus.GaugeValue,
-					float64(len(configRooms)), "config", "videoroom")
+				ch <- prometheus.MustNewConstMetric(streamsConfiguredDesc, prometheus.GaugeValue,
+					float64(len(configRooms)), "videoroom")
 			}
 		}
 
@@ -871,8 +878,8 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 		if err != nil {
 			e.logger.Error("Cannot list videorooms", "err", err)
 		} else {
-			ch <- prometheus.MustNewConstMetric(streamsDesc, prometheus.GaugeValue,
-				float64(len(rooms)), "api-request", "videoroom")
+			ch <- prometheus.MustNewConstMetric(streamsMountedDesc, prometheus.GaugeValue,
+				float64(len(rooms)), "videoroom")
 
 			if configRooms != nil {
 				mountedRoomIDs := make(map[uint64]bool, len(rooms))

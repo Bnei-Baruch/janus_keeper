@@ -19,7 +19,8 @@ Janus Keeper monitors a Janus instance via its Admin and HTTP APIs, exports live
 | `janus_current_sessions` | Gauge | Number of active Janus sessions |
 | `janus_current_handles` | Gauge | Number of open plugin handles |
 | `janus_plugin` | Gauge | Loaded plugins (labels: `name`, `state`) |
-| `janus_streams` | Gauge | Mountpoint count (labels: `source`=config/api-request, `plugin`=streaming/videoroom) |
+| `janus_streams_configured` | Gauge | Streams declared in config (label: `plugin`=streaming/videoroom) |
+| `janus_streams_mounted` | Gauge | Streams currently mounted/active in Janus (label: `plugin`=streaming/videoroom) |
 | `janus_stream` | Gauge | Config entry missing from live Janus (labels: `status`, `id`, `type`, `description`) |
 
 ## Installation
