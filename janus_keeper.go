@@ -895,16 +895,15 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 				float64(len(rooms)), "videoroom")
 
 			if configRooms != nil {
-				mountedRoomIDs := make(map[uint64]bool, len(rooms))
+				mountedRoomIDs := make(map[string]bool, len(rooms))
 				for _, r := range rooms {
 					mountedRoomIDs[r.ID] = true
 				}
 				for _, r := range configRooms {
-					id, err := strconv.ParseUint(r.ID, 10, 64)
-					if err != nil {
+					if r.ID == "" {
 						continue
 					}
-					if !mountedRoomIDs[id] {
+					if !mountedRoomIDs[r.ID] {
 						ch <- prometheus.MustNewConstMetric(
 							streamMissingDesc, prometheus.GaugeValue, 1,
 							"missing", r.ID, "videoroom", r.Description,
