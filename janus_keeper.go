@@ -115,7 +115,7 @@ type videoroomConfig struct {
 
 // mountedVideoroom is one item from the videoroom plugin "list" API response.
 type mountedVideoroom struct {
-	ID          uint64 `json:"room"`
+	ID          string `json:"room"`
 	Description string `json:"description"`
 }
 
